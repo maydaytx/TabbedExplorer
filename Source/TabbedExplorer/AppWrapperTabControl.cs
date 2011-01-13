@@ -10,8 +10,15 @@ namespace TabbedExplorer
 
 		internal event Action<IntPtr> TabRemoved;
 
-		private TabPage draggingTab;
 		private bool isLeftMouseButtonDown;
+		private int draggingTabIndex;
+		private int draggingTabLeft;
+		private int draggingTabRight;
+
+		protected AppWrapperTabControl()
+		{
+			DoubleBuffered = true;
+		}
 
 		internal bool IsWrapped(IntPtr child)
 		{
@@ -88,32 +95,60 @@ namespace TabbedExplorer
 			lock (tabPagesLock)
 			{
 				tab = GetTabUnderMouse(e.Location);
-			}
 
-			if (e.Button == MouseButtons.Right)
-			{
-				ContextMenuStrip contextMenuStrip = new ContextMenuStrip();
-
-				contextMenuStrip.Items.AddRange(new ToolStripItem[]
+				if (e.Button == MouseButtons.Right)
 				{
-					new ToolStripMenuItem("Close Tab", null, (o, eargs) => CloseTabPage(tab, true)),
-					new ToolStripMenuItem("Popout Tab", null, (o, eargs) => CloseTabPage(tab, false)),
-					new ToolStripMenuItem("Rename Tab", null, (o, eargs) => tab.Rename())
-				});
+					ContextMenuStrip contextMenuStrip = new ContextMenuStrip();
 
-				ContextMenuStrip = contextMenuStrip;
-			}
-			else if (e.Button == MouseButtons.Middle)
-			{
-				CloseTabPage(tab, true);
-			}
-			else if (e.Button == MouseButtons.Left)
-			{
-				draggingTab = tab;
-				isLeftMouseButtonDown = true;
+					contextMenuStrip.Items.AddRange(new ToolStripItem[]
+					{
+						new ToolStripMenuItem("Close Tab", null, (o, eargs) => CloseTabPage(tab, true)),
+						new ToolStripMenuItem("Popout Tab", null, (o, eargs) => CloseTabPage(tab, false)),
+						new ToolStripMenuItem("Rename Tab", null, (o, eargs) => tab.Rename())
+					});
+
+					ContextMenuStrip = contextMenuStrip;
+				}
+				else if (e.Button == MouseButtons.Middle)
+				{
+					CloseTabPage(tab, true);
+				}
+				else if (e.Button == MouseButtons.Left)
+				{
+					isLeftMouseButtonDown = true;
+
+					draggingTabIndex = TabPages.IndexOf(tab);
+
+					SetDraggingTabLeftAndRight();
+				}
 			}
 
 			base.OnMouseDown(e);
+		}
+
+		private void SetDraggingTabLeftAndRight()
+		{
+			Rectangle tabRectangle = GetTabRect(draggingTabIndex);
+
+			if (draggingTabIndex > 0)
+			{
+				Rectangle leftTabRectangle = GetTabRect(draggingTabIndex - 1);
+
+				if (tabRectangle.Width > leftTabRectangle.Width)
+					draggingTabLeft = tabRectangle.Left;
+				else
+					draggingTabLeft = leftTabRectangle.Left + tabRectangle.Width;
+			}
+
+			if (draggingTabIndex < TabPages.Count - 1)
+			{
+				Rectangle rightTabRectangle = GetTabRect(draggingTabIndex + 1);
+
+				if (tabRectangle.Width > rightTabRectangle.Width)
+					draggingTabRight = tabRectangle.Right;
+				else
+					draggingTabRight = rightTabRectangle.Right - tabRectangle.Width;
+			}
 		}
 
 		protected override void OnMouseMove(MouseEventArgs e)
@@ -122,15 +157,26 @@ namespace TabbedExplorer
 			{
 				lock (tabPagesLock)
 				{
-					TabPage tab = GetTabUnderMouse(e.Location);
-
-					if (tab != null && draggingTab != null && tab != draggingTab)
+					if (draggingTabIndex > 0 && e.X < draggingTabLeft)
 					{
-						int index = TabPages.IndexOf(tab);
+						--draggingTabIndex;
+						var leftTab = TabPages[draggingTabIndex];
+						TabPages.RemoveAt(draggingTabIndex);
+						SelectedIndex = draggingTabIndex;
+						TabPages.Insert(draggingTabIndex + 1, leftTab);
 
-						TabPages.Remove(draggingTab);
-						TabPages.Insert(index, draggingTab);
-						SelectedIndex = index;
+						SetDraggingTabLeftAndRight();
+					}
+
+					if (draggingTabIndex < TabPages.Count - 1 && e.X > draggingTabRight)
+					{
+						++draggingTabIndex;
+						var rightTab = TabPages[draggingTabIndex];
+						TabPages.RemoveAt(draggingTabIndex);
+						TabPages.Insert(draggingTabIndex - 1, rightTab);
+						SelectedIndex = draggingTabIndex;
+
+						SetDraggingTabLeftAndRight();
 					}
 				}
 			}
