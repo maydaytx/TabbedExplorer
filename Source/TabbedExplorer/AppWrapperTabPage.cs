@@ -5,19 +5,21 @@ namespace TabbedExplorer
 {
 	internal class AppWrapperTabPage : TabPage
 	{
+		private readonly IntPtr child;
 		private AppWrapper appWrapper;
 
 		internal IntPtr Child
 		{
-			get { return appWrapper.Child; }
+			get { return child; }
 		}
 
 		internal AppWrapperTabPage(string text, IntPtr child)
 		{
+			this.child = child;
+			appWrapper = new AppWrapper(child);
+
 			Text = text;
 			Name = child.ToString();
-
-			appWrapper = new AppWrapper(child);
 
 			Controls.Add(appWrapper);
 		}
