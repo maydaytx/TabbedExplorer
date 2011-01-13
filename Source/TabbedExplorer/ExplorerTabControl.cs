@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace TabbedExplorer
 {
@@ -11,13 +12,6 @@ namespace TabbedExplorer
 		internal ExplorerTabControl()
 		{
 			TabRemoved += RemoveExplorer;
-		}
-
-		private void RemoveExplorer(IntPtr child)
-		{
-			explorers[child].UrlChanged -= explorer_UrlChanged;
-			explorers[child].Closed -= explorer_Closed;
-			explorers.Remove(child);
 		}
 
 		internal void OpenNewExplorerTab()
@@ -35,6 +29,12 @@ namespace TabbedExplorer
 			explorerManager.Open(Config.DefaultExplorerURL, AddExplorer);
 		}
 
+		internal override void Close()
+		{
+			foreach (IntPtr explorer in explorers.Keys.ToArray())
+				CloseTabPage(explorer, true);
+		}
+
 		private void AddExplorer(Explorer explorer)
 		{
 			if (explorer == null)
@@ -47,6 +47,13 @@ namespace TabbedExplorer
 			AddTabPage(explorer.MainWindowHandle, explorer.Url);
 		}
 
+		private void RemoveExplorer(IntPtr child)
+		{
+			explorers[child].UrlChanged -= explorer_UrlChanged;
+			explorers[child].Closed -= explorer_Closed;
+			explorers.Remove(child);
+		}
+
 		private void explorer_UrlChanged(Explorer explorer)
 		{
 			SetTabPageText(explorer.MainWindowHandle, explorer.Url);
@@ -55,15 +62,6 @@ namespace TabbedExplorer
 		private void explorer_Closed(Explorer explorer)
 		{
 			CloseTabPage(explorer.MainWindowHandle, false);
-		}
-
-		internal override void Close()
-		{
-			foreach (IntPtr explorer in explorers.Keys)
-			{
-				RemoveExplorer(explorer);
-				CloseTabPage(explorer, true);
-			}
 		}
 	}
 }
