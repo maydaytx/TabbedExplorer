@@ -1,4 +1,6 @@
-﻿namespace TabbedExplorer
+﻿using System.Drawing;
+
+namespace TabbedExplorer
 {
 	partial class TabbedExplorer
 	{
@@ -45,9 +47,9 @@
 			// 
 			this.buttonAdd.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
 			this.buttonAdd.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-			this.buttonAdd.Location = new System.Drawing.Point(614, 18);
+			this.buttonAdd.Location = new System.Drawing.Point(620, 2);
 			this.buttonAdd.Name = "buttonAdd";
-			this.buttonAdd.Size = new System.Drawing.Size(24, 23);
+			this.buttonAdd.Size = new System.Drawing.Size(18, 18);
 			this.buttonAdd.TabIndex = 1;
 			this.buttonAdd.Text = "+";
 			this.buttonAdd.UseVisualStyleBackColor = true;

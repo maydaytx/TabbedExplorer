@@ -41,7 +41,6 @@ namespace TabbedExplorer
 				return;
 
 			explorer.UrlChanged += explorer_UrlChanged;
-			explorer.Closed += explorer_Closed;
 
 			explorers.Add(explorer.MainWindowHandle, explorer);
 			AddTabPage(explorer.MainWindowHandle, explorer.Url);
@@ -50,18 +49,12 @@ namespace TabbedExplorer
 		private void RemoveExplorer(IntPtr child)
 		{
 			explorers[child].UrlChanged -= explorer_UrlChanged;
-			explorers[child].Closed -= explorer_Closed;
 			explorers.Remove(child);
 		}
 
 		private void explorer_UrlChanged(Explorer explorer)
 		{
 			SetTabPageText(explorer.MainWindowHandle, explorer.Url);
-		}
-
-		private void explorer_Closed(Explorer explorer)
-		{
-			CloseTabPage(explorer.MainWindowHandle, false);
 		}
 	}
 }
